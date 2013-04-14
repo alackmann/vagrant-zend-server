@@ -12,9 +12,21 @@ execute "update apt" do
   command "apt-get update -q -y"
 end
 
-package "zend-server-php-5.4"
+package "zend-server-php-5.3"
 package "apache2-mpm-itk"
 package "curl"
+package "vim"
+package "screen"
+package "lynx-cur"
+package "mysql-server"
+package "php-5.3-apc-zend-server"
+
+#solr extension requirements
+package "autoconf"
+package "libcurl4-gnutls-dev"
+package "libxml2"
+package "libxml2-dev"
+package "make"
 
 execute "install composer" do
   command "curl -sS https://getcomposer.org/installer | /usr/local/zend/bin/php -- --install-dir=/usr/local/bin"
@@ -39,12 +51,38 @@ cookbook_file "/etc/apache2/sites-available/app.conf" do
   owner "root"
 end
 
+cookbook_file "/usr/local/zend/lib/php_extensions/solr.so" do
+  source "solr.so"
+  group "root"
+  owner "root"
+end
+
+#execute "install solr module" do
+#  command "printf \"\n\n\n\" | pecl install -n solr"
+#  command "echo 'extension=solr.so' > /usr/local/zend/etc/conf.d/solr.ini"
+#  not_if "test -f /usr/local/zend/lib/php_extensions/solr.so"
+#end
+
+#php_pear 'solr' do
+#  action :install
+#end
+
+execute "install solr module" do
+  command "echo 'extension=solr.so' > /usr/local/zend/etc/conf.d/solr.ini"
+end
+
 execute "disable default site" do
   command "a2dissite default"
 end
 
 execute "enable app site" do
   command "a2ensite app.conf"
+end
+
+execute "disable zend modules" do
+  command "sed -i 's/zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/datacache.ini"
+  command "sed -i 's/zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/optimizerplus.ini"
+  command "sed -i 's/zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/pagecache.ini"
 end
 
 service "apache2" do
