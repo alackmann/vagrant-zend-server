@@ -18,7 +18,7 @@ package "curl"
 package "vim"
 package "screen"
 package "lynx-cur"
-package "mysql-server"
+#package "mysql-server"
 package "php-5.3-apc-zend-server"
 
 #solr extension requirements
@@ -27,6 +27,8 @@ package "libcurl4-gnutls-dev"
 package "libxml2"
 package "libxml2-dev"
 package "make"
+
+include_recipe "mysql::server"
 
 execute "install composer" do
   command "curl -sS https://getcomposer.org/installer | /usr/local/zend/bin/php -- --install-dir=/usr/local/bin"
@@ -80,10 +82,15 @@ execute "enable app site" do
 end
 
 execute "disable zend modules" do
-  command "sed -i 's/zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/datacache.ini"
-  command "sed -i 's/zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/optimizerplus.ini"
-  command "sed -i 's/zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/pagecache.ini"
+  command "sed -i 's/^zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/datacache.ini"
+  command "sed -i 's/^zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/optimizerplus.ini"
+  command "sed -i 's/^zend_extension_manager/;zend_extension_manager/g' /usr/local/zend/etc/conf.d/pagecache.ini"
 end
+
+#execute "mysql configurations" do
+#  command "mysql -uroot -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'\""
+#  command "sed -i 's/^bind-address/#bind-address/g' /etc/mysql/my.cnf"
+#end
 
 service "apache2" do
   action :restart
